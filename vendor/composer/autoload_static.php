@@ -208,6 +208,7 @@ class ComposerStaticInit91b5502eb66f2630d3298d5ddcae494a
     );
 
     public static $classMap = array (
+        'AlterUsersTable' => __DIR__ . '/../..' . '/app/database/migrations/2016_07_21_100414_alter_users_table.php',
         'Artdarek\\OAuth\\Facade\\OAuth' => __DIR__ . '/..' . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/Facade/OAuth.php',
         'Artdarek\\OAuth\\OAuth' => __DIR__ . '/..' . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/OAuth.php',
         'Artdarek\\OAuth\\OAuthServiceProvider' => __DIR__ . '/..' . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/OAuthServiceProvider.php',

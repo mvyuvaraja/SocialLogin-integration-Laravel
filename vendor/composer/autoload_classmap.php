@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'AlterUsersTable' => $baseDir . '/app/database/migrations/2016_07_21_100414_alter_users_table.php',
     'Artdarek\\OAuth\\Facade\\OAuth' => $vendorDir . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/Facade/OAuth.php',
     'Artdarek\\OAuth\\OAuth' => $vendorDir . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/OAuth.php',
     'Artdarek\\OAuth\\OAuthServiceProvider' => $vendorDir . '/artdarek/oauth-4-laravel/src/Artdarek/OAuth/OAuthServiceProvider.php',

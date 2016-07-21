@@ -43,7 +43,7 @@ class SocialController extends \BaseController {
             // Send a request with it
             $result = json_decode($fb->request('/me'), true);
 
-            $user = User::where('email', '=', $result['email'])->first();
+            $user = User::leftJoin('user_credentials AS c', 'c.user_id', '=', 'users.id')->where('email', '=', $result['email'])->first();
 
             if (!$user) {
                 
@@ -51,11 +51,16 @@ class SocialController extends \BaseController {
 
                 $user = new User;
                 $user->name = $result['first_name'];
-                $user->email = $result['email'];
-                $user->registered_from = 'Facebook';
-                $user->password = Hash::make($Password);
                 $user->save();
-
+                
+                $user_credential = [
+                    'user_id' => $user->id,
+                    'email' => $result['email'],
+                    'password' => Hash::make($Password),
+                    'registered_from' => 'Facebook',
+                ];
+                
+                UserCredential::insert($user_credential);
                 //mailing
             } 
             
@@ -84,24 +89,30 @@ class SocialController extends \BaseController {
 
         $code = Input::get('code');
         $googleService = OAuth::consumer('Google');
-
+        
         if (!empty($code)) {
 
             $token = $googleService->requestAccessToken($code);
             $result = json_decode($googleService->request('https://www.googleapis.com/oauth2/v1/userinfo'), true);
 
-            $user = User::where('email', '=', $result['email'])->first();
+            $user = User::leftJoin('user_credentials AS c', 'c.user_id', '=', 'users.id')->where('email', '=', $result['email'])->first();
 
             if (!$user) {
                 
                 $Password = 'Password@123';//str_random(8);
 
                 $user = new User;
-                $user->name = $result['given_name'];
-                $user->email = $result['email'];
-                $user->registered_from = 'Google';
-                $user->password = Hash::make($Password);
+                $user->name = $result['first_name'];
                 $user->save();
+                
+                $user_credential = [
+                    'user_id' => $user->id,
+                    'email' => $result['given_name'],
+                    'password' => Hash::make($Password),
+                    'registered_from' => 'Google',
+                ];
+                
+                UserCredential::insert($user_credential);
 
                 //mailing
             } 

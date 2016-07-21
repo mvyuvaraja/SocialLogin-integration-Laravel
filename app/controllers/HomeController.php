@@ -40,8 +40,12 @@ class HomeController extends \BaseController {
 
             if (filter_var($email, FILTER_VALIDATE_EMAIL) && $validator->passes()) {
 
-                if (Auth::attempt(array('email' => $email, 'password' => Input::get('password')), false)) {
-
+                $user = User::leftJoin('user_credentials AS c', 'c.user_id', '=', 'users.id')
+                            ->where('email', '=', $email)
+                            ->first();
+                
+                if ($user && Hash::check(Input::get('password'), $user->password)) {
+                    Auth::login($user);
                     return Response::json(['valid' => 1], 200);
                 }
 
@@ -61,7 +65,7 @@ class HomeController extends \BaseController {
 
             $rules = array(
                 'name' => 'required',
-                'email' => 'required|email|unique:users',
+                'email' => 'required|email|unique:user_credentials',
                 'password' => 'required'
             );
 
@@ -74,9 +78,16 @@ class HomeController extends \BaseController {
 
                 $user = new User;
                 $user->name = $name;
-                $user->email = $email;
-                $user->password = Hash::make($Password);
                 $user->save();
+                
+                $user_credential = [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'password' => Hash::make($Password),
+                    'registered_from' => 'UI'
+                ];
+                
+                UserCredential::insert($user_credential);
                 
                 //mailing
                 
@@ -94,6 +105,58 @@ class HomeController extends \BaseController {
         if(!Auth::check())
 		    return Redirect::to('/login');
 		return View::make('dashboard');
+	}
+
+	public function anyAddSocialLoginAccount()
+	{
+        if(Request::method() === 'GET'){
+            if(!Auth::check())
+                return Redirect::to('/login');
+                
+            return View::make('add_social_login');
+            
+        } else {          
+
+            $rules = array(
+                'registered_from' => 'required',
+                'email' => 'required|email|unique:user_credentials',
+                'password' => 'required'
+            );
+
+            $validator = Validator::make(Input::all(), $rules);
+            $registered_from = trim(Input::get('registered_from'));
+            $email = trim(Input::get('email'));
+            $Password = trim(Input::get('password'));
+
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) && $validator->passes()) {
+
+                $user = UserCredential::where('email', '=', $email)->first();
+                
+                $user_credential = [
+                    'user_id' => Auth::user()->id,
+                    'email' => $email,
+                    'password' => Hash::make($Password),
+                    'registered_from' => $registered_from
+                ];
+
+                if (!$user) {
+                    UserCredential::insert($user_credential);                
+                }else{
+                    if(Auth::user()->id == $user->id){
+                        UserCredential::update($user_credential);
+                    }else{
+                        return Response::json(array('valid' => 0, 'message' => 'Account already associated with someother person.'));
+                    }
+                }
+                
+                return Response::json(array('valid' => 1, 'message' => 'Account created successfully.'));
+            }
+
+            $errors = array_flatten($validator->errors()->toArray());
+            $errors = implode(' ', $errors);
+            return Response::json(array('valid' => 0, 'message' => 'Errors occured. '.$errors)); 
+              
+        }
 	}
 
 	public function getLogout()
